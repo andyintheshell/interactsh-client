@@ -516,13 +516,20 @@ async fn test_context_emojis() {
     assert_eq!(context.attributes.get("weird").unwrap(), "🔥👩‍🚒🧯");
 }
 
-#[tokio::test]
-async fn test_config_unicode_domain() {
+#[test]
+fn test_config_unicode_domain() {
     let mut config = ClientConfig::default();
-    config.server = "http://öäü.com".to_string();
-    config.max_retries = 0;
-    let client_res = InteractshClient::new(config).await;
-    assert!(client_res.is_err());
+    config.server = "http://öäü.test".to_string();
+    config.validate().unwrap();
+
+    // Building a request exercises IDNA encoding without DNS or network I/O.
+    // Do not construct InteractshClient here: its constructor sends /register.
+    let request = reqwest::Client::new()
+        .post(format!("{}/register", config.server))
+        .build()
+        .unwrap();
+    assert_eq!(request.url().host_str(), Some("xn--4ca9at.test"));
+    assert_eq!(request.url().path(), "/register");
 }
 
 // --- Category 8: Duplicate entries ---
