@@ -1,4 +1,3 @@
-#![allow(missing_docs)]
 use crate::error::{ConfigField, ConfigProblem, Error, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -27,29 +26,39 @@ pub const MAX_GENERATED_LABEL_BYTES: usize = 63;
 /// `ClientConfig` is `Send` and `Sync`.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ClientConfig {
+    /// Interaction server hostname or URL. Default: `oast.pro`.
     pub server: String,
+    /// Optional server authentication token. Default: `None`.
     #[serde(default)]
     pub token: Option<String>,
+    /// Header used to send the token. Default: `Authorization`.
     #[serde(default = "default_authorization_header")]
     pub authorization_header: String,
+    /// Correlation ID length. Default: 20, matching public servers.
+    /// Must match the server's `-correlation-id-length` setting.
     #[serde(default = "default_correlation_id_length")]
     pub correlation_id_length: usize,
+    /// Per-probe nonce length. Default: 13, matching public servers.
+    /// Must match the server's `-correlation-id-nonce-length` setting.
+    /// The combined correlation ID and nonce must fit in a 63-byte DNS label.
     #[serde(default = "default_nonce_length")]
     pub nonce_length: usize,
+    /// Maximum accepted poll response body size in bytes. Default: 10 MiB.
     #[serde(default = "default_max_poll_response_bytes")]
     pub max_poll_response_bytes: usize,
+    /// URL scheme used when `server` omits one. Default: `https`.
     #[serde(default = "default_scheme_string")]
     pub default_scheme: String,
     /// If true, accept invalid TLS certificates (dangerous). Default: false.
     #[serde(default = "default_accept_invalid_certs")]
     pub accept_invalid_certs: bool,
-    /// Number of retry attempts for transient failures (0 = no retries).
+    /// Number of retry attempts for transient failures (0 = no retries). Default: 3.
     #[serde(default = "default_max_retries")]
     pub max_retries: usize,
-    /// Base backoff in milliseconds used for exponential backoff between retries.
+    /// Base exponential retry backoff in milliseconds. Default: 100.
     #[serde(default = "default_retry_backoff_millis")]
     pub retry_backoff_millis: u64,
-    /// Optional per-request timeout in milliseconds for the underlying HTTP client.
+    /// Optional per-request HTTP timeout in milliseconds. Default: `None`.
     #[serde(default = "default_request_timeout_millis")]
     pub request_timeout_millis: Option<u64>,
 }
@@ -88,22 +97,27 @@ impl ClientConfig {
         Ok(())
     }
 
+    /// Parse TOML and validate the resulting configuration.
     pub fn from_toml_str(input: &str) -> Result<Self> {
         let config: Self = toml::from_str(input)?;
         config.validate()?;
         Ok(config)
     }
 
+    /// Validate and serialize to TOML, including any authentication token.
     pub fn to_toml_string(&self) -> Result<String> {
         self.validate()?;
         Ok(toml::to_string_pretty(self)?)
     }
 
+    /// Read a TOML file and validate the resulting configuration.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         let contents = fs::read_to_string(path)?;
         Self::from_toml_str(&contents)
     }
 
+    /// Validate and write a TOML file, including any authentication token.
+    /// Protect the file from unauthorized access when a token is configured.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
         fs::write(path, self.to_toml_string()?)?;
         Ok(())

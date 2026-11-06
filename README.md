@@ -79,7 +79,7 @@ lengths, explicitly set both fields in `ClientConfig`.
 # fn example(client: &InteractshClient) -> interactsh_client::Result<()> {
 let url = client.generate_url(InteractionContext::new("probe-123"))?;
 // URL format: {correlation_id}{nonce}.{server}
-// Example: abc123def456ghi.oast.pro
+// Example: abcdefghijklmnopqrst0123456789abc.oast.pro
 # Ok(())
 # }
 ```
@@ -129,8 +129,6 @@ use interactsh_client::ClientConfig;
 let config = ClientConfig {
     server: "oast.fun".to_string(),
     token: Some("api-key".to_string()),
-    correlation_id_length: 20,
-    nonce_length: 12,
     ..ClientConfig::default()
 };
 ```
@@ -143,7 +141,6 @@ use interactsh_client::ClientConfig;
 let config = ClientConfig::from_toml_str(r#"
     server = "oast.fun"
     token = "secret-api-key"
-    correlation_id_length = 16
 "#)?;
 ```
 

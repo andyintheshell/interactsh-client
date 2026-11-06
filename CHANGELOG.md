@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased — 0.1.0 — first interactsh-client release
+## 0.1.0 — first interactsh-client release
 
-This fork has not been published to crates.io. These entries describe preparation
-for its first release, not breaking changes to a previously released
+These entries describe the first release, not breaking changes to a previously released
 `interactsh-client` API. The original `interactsh` releases below are separate
 upstream history.
+
+- Completed configuration field documentation and corrected public-server examples to retain compatible default lengths.
 
 - Fixed public-server compatibility by changing default correlation ID/nonce lengths from 14/16 to upstream's 20/13. Self-hosted servers with custom lengths must configure matching client lengths explicitly.
 - Added a manual-only `public_smoke` example that uses curl and verifies the resulting HTTP interaction through library polling.
