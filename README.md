@@ -12,11 +12,10 @@ Add the crate to your project:
 cargo add interactsh-client
 ```
 
-`interactsh-client` is async. Also add `tokio` to your `Cargo.toml` before copy-pasting the example:
+`interactsh-client` is async. Also add `tokio` before copy-pasting the example:
 
-```toml
-[dependencies]
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+```sh
+cargo add tokio --features macros,rt-multi-thread,time
 ```
 
 ```rust,no_run
