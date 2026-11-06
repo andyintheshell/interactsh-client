@@ -16,7 +16,7 @@ Requires **Rust 1.95 or newer**. The checked-in `rust-toolchain.toml` pins devel
 
 ```toml
 [dependencies]
-interactsh-client = "0.2"
+interactsh-client = "0.3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 ```
 

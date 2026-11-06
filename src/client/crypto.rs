@@ -98,6 +98,7 @@ pub fn encoded_public_key(public_key: &RsaPublicKey, url: &str) -> Result<String
 mod tests {
     use super::*;
     use rand::{rngs::StdRng, SeedableRng};
+    use rsa::pkcs8::DecodePrivateKey;
 
     fn decode_hex(input: &str) -> Vec<u8> {
         (0..input.len())
@@ -128,7 +129,12 @@ mod tests {
             decode_hex("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51");
         let iv = decode_hex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
         let mut rng = StdRng::seed_from_u64(95);
-        let private_key = RsaPrivateKey::new(&mut rng, 2048).unwrap();
+        // Public test-only fixture: never use this key for real interactions.
+        // Parsing avoids prime generation in every debug test run.
+        let private_key = RsaPrivateKey::from_pkcs8_pem(include_str!(
+            "../../tests/fixtures/rsa-2048-test-only.pem"
+        ))
+        .unwrap();
         let public_key = RsaPublicKey::from(&private_key);
 
         for (key, ciphertext) in vectors {
