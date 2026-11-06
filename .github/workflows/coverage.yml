@@ -20,11 +20,7 @@ env:
 jobs:
   coverage:
     name: Rust coverage
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [ubuntu-26.04, macos-15]
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
