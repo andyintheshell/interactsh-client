@@ -93,3 +93,67 @@ pub fn encoded_public_key(public_key: &RsaPublicKey, url: &str) -> Result<String
         })?;
     Ok(BASE64.encode(pem.as_bytes()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::{rngs::StdRng, SeedableRng};
+    use rsa::pkcs8::DecodePrivateKey;
+
+    fn decode_hex(input: &str) -> Vec<u8> {
+        (0..input.len())
+            .step_by(2)
+            .map(|offset| u8::from_str_radix(&input[offset..offset + 2], 16).unwrap())
+            .collect()
+    }
+
+    #[test]
+    fn decrypts_nist_aes_ctr_vectors_with_rsa_oaep_keys() {
+        // NIST SP 800-38A, F.5: two blocks exercise counter advancement for
+        // every supported AES key size, independently of our encryption code.
+        let vectors = [
+            (
+                "2b7e151628aed2a6abf7158809cf4f3c",
+                "874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff",
+            ),
+            (
+                "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+                "1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e94",
+            ),
+            (
+                "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+                "601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c5",
+            ),
+        ];
+        let plaintext =
+            decode_hex("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51");
+        let iv = decode_hex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
+        let mut rng = StdRng::seed_from_u64(95);
+        // Public test-only fixture: never use this key for real interactions.
+        // Parsing avoids prime generation in every debug test run.
+        let private_key = RsaPrivateKey::from_pkcs8_pem(include_str!(
+            "../../tests/fixtures/rsa-2048-test-only.pem"
+        ))
+        .unwrap();
+        let public_key = RsaPublicKey::from(&private_key);
+
+        for (key, ciphertext) in vectors {
+            let key = decode_hex(key);
+            let encrypted_key = public_key
+                .encrypt(&mut rng, Oaep::new::<Sha256>(), &key)
+                .unwrap();
+            let mut message = iv.clone();
+            message.extend_from_slice(&decode_hex(ciphertext));
+
+            let decrypted = decrypt_message(
+                &private_key,
+                &BASE64.encode(encrypted_key),
+                &BASE64.encode(message),
+                "https://example.test/poll",
+            )
+            .unwrap();
+
+            assert_eq!(decrypted, plaintext, "AES-{}-CTR", key.len() * 8);
+        }
+    }
+}

@@ -57,6 +57,9 @@ impl InteractshClient {
     }
 
     /// Creates a new `InteractshClient` using a customized HTTP client.
+    ///
+    /// The client must come from Reqwest 0.13; clients from Reqwest 0.12 are
+    /// not type-compatible.
     pub async fn with_http_client(
         config: ClientConfig,
         http_client: reqwest::Client,

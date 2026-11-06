@@ -10,11 +10,13 @@ The original copyright notices and dual MIT/Apache-2.0 licensing are preserved. 
 
 ## Quick start
 
+Requires **Rust 1.95 or newer**. The checked-in `rust-toolchain.toml` pins development tools to Rust 1.95.0; CI also tests the latest stable and nightly compilers.
+
 `interactsh-client` is async. Add `tokio` to your `Cargo.toml` before copy-pasting the example:
 
 ```toml
 [dependencies]
-interactsh-client = "0.2"
+interactsh-client = "0.3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 ```
 
