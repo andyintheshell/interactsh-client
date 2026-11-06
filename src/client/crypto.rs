@@ -78,10 +78,7 @@ pub fn decrypt_message(
         }
     }
 
-    while plaintext
-        .last()
-        .is_some_and(|byte| byte.is_ascii_whitespace())
-    {
+    while plaintext.last().is_some_and(u8::is_ascii_whitespace) {
         plaintext.pop();
     }
     Ok(plaintext)

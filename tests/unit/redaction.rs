@@ -1,4 +1,4 @@
-use interactsh::ClientConfig;
+use interactsh_client::ClientConfig;
 
 /// Regression: `ClientConfig` used to derive `Debug`, which printed the
 /// bearer `token` in plaintext. The token authenticates every request to the

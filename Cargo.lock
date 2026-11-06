@@ -654,7 +654,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "interactsh"
+name = "interactsh-client"
 version = "0.2.4"
 dependencies = [
  "aes",

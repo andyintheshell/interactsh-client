@@ -1,21 +1,29 @@
-# interactsh
+# interactsh-client
 
 Async client for polling out-of-band interaction servers. Generate unique URLs, inject them into payloads, and correlate DNS/HTTP interactions back to the original probe. Used for detecting blind XSS, SSRF, SQL injection, and other vulnerabilities where the target makes outbound requests.
 
-`interactsh` is async. Add `tokio` to your `Cargo.toml` before copy-pasting the example:
+## Fork provenance and disclaimer
+
+This is an independent fork of [`interactsh` version 0.2.4](https://crates.io/crates/interactsh/0.2.4), originally authored by Santh. [andyintheshell](https://github.com/andyintheshell) created this fork to continue maintenance after the original crate was no longer maintained and its listed source repository became unavailable (404). This fork is not affiliated with or endorsed by the original maintainers.
+
+The original copyright notices and dual MIT/Apache-2.0 licensing are preserved. See [UPSTREAM.md](UPSTREAM.md) for the exact source archive and checksum.
+
+## Quick start
+
+`interactsh-client` is async. Add `tokio` to your `Cargo.toml` before copy-pasting the example:
 
 ```toml
 [dependencies]
-interactsh = "0.2"
+interactsh-client = "0.2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 ```
 
 ```rust,no_run
-use interactsh::{InteractshClient, ClientConfig, InteractionContext};
+use interactsh_client::{InteractshClient, ClientConfig, InteractionContext};
 use std::time::Duration;
 
 #[tokio::main]
-async fn main() -> interactsh::Result<()> {
+async fn main() -> interactsh_client::Result<()> {
     let client = InteractshClient::new(ClientConfig::default()).await?;
     
     // Generate a URL tagged with context
@@ -61,8 +69,8 @@ Each generated URL contains:
 The combination ensures global uniqueness while letting you correlate interactions back to specific probes.
 
 ```rust
-# use interactsh::{InteractshClient, InteractionContext};
-# fn example(client: &InteractshClient) -> interactsh::Result<()> {
+# use interactsh_client::{InteractshClient, InteractionContext};
+# fn example(client: &InteractshClient) -> interactsh_client::Result<()> {
 let url = client.generate_url(InteractionContext::new("probe-123"))?;
 // URL format: {correlation_id}{nonce}.{server}
 // Example: abc123def456ghi.oast.pro
@@ -75,8 +83,8 @@ let url = client.generate_url(InteractionContext::new("probe-123"))?;
 Attach metadata to URLs for later correlation:
 
 ```rust
-# use interactsh::{InteractshClient, InteractionContext};
-# fn example(client: &InteractshClient) -> interactsh::Result<()> {
+# use interactsh_client::{InteractshClient, InteractionContext};
+# fn example(client: &InteractshClient) -> interactsh_client::Result<()> {
 let context = InteractionContext::new("ssrf-test")
     .with_attribute("template_id", "CVE-2021-44228")
     .with_attribute("target_host", "api.internal");
@@ -93,8 +101,8 @@ When polling returns interactions, the context is restored from the nonce mappin
 The `poll()` method retrieves all interactions for your correlation ID:
 
 ```rust,no_run
-# use interactsh::InteractshClient;
-# async fn example(client: &InteractshClient) -> interactsh::Result<()> {
+# use interactsh_client::InteractshClient;
+# async fn example(client: &InteractshClient) -> interactsh_client::Result<()> {
 let interactions = client.poll().await?;
 for item in interactions {
     println!("Protocol: {}", item.event.protocol);
@@ -110,7 +118,7 @@ Unknown interactions (wrong correlation ID or forgotten nonces) are filtered out
 ## Configuration
 
 ```rust
-use interactsh::ClientConfig;
+use interactsh_client::ClientConfig;
 
 let config = ClientConfig {
     server: "oast.fun".to_string(),
@@ -124,7 +132,7 @@ let config = ClientConfig {
 Load from TOML:
 
 ```rust
-use interactsh::ClientConfig;
+use interactsh_client::ClientConfig;
 
 let config = ClientConfig::from_toml_str(r#"
     server = "oast.fun"
@@ -148,7 +156,7 @@ Errors are typed by stage:
 Point at your own interactsh instance:
 
 ```rust
-use interactsh::ClientConfig;
+use interactsh_client::ClientConfig;
 
 let config = ClientConfig {
     server: "oast.internal.corp".to_string(),
@@ -163,7 +171,7 @@ Pull requests are welcome. There is no such thing as a perfect crate. If you fin
 
 ## License
 
-MIT. Copyright 2026 CORUM COLLECTIVE LLC.
+Licensed under either the [MIT License](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option (`MIT OR Apache-2.0`). Original copyright and license notices are retained.
 
-[![crates.io](https://img.shields.io/crates/v/interactsh.svg)](https://crates.io/crates/interactsh)
-[![docs.rs](https://docs.rs/interactsh/badge.svg)](https://docs.rs/interactsh)
+[![crates.io](https://img.shields.io/crates/v/interactsh-client.svg)](https://crates.io/crates/interactsh-client)
+[![docs.rs](https://docs.rs/interactsh-client/badge.svg)](https://docs.rs/interactsh-client)

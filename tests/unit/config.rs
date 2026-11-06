@@ -1,4 +1,4 @@
-use interactsh::{ClientConfig, ConfigField, ConfigProblem, Error};
+use interactsh_client::{ClientConfig, ConfigField, ConfigProblem, Error};
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -143,7 +143,7 @@ fn config_rejects_zero_max_poll_response_bytes() {
 #[test]
 fn config_rejects_generated_label_overflow() {
     let correlation_too_large = ClientConfig {
-        correlation_id_length: interactsh::MAX_GENERATED_LABEL_BYTES + 1,
+        correlation_id_length: interactsh_client::MAX_GENERATED_LABEL_BYTES + 1,
         ..ClientConfig::default()
     }
     .validate();

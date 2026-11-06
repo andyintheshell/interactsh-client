@@ -1,4 +1,7 @@
-use interactsh::{ClientConfig, InteractionContext, InteractshClient};
+// Preserve the upstream tests' explicit, per-case configuration mutations.
+#![allow(clippy::field_reassign_with_default)]
+
+use interactsh_client::{ClientConfig, InteractionContext, InteractshClient};
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;

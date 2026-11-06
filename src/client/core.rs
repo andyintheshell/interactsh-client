@@ -218,11 +218,7 @@ impl InteractshClient {
         request
     }
 
-    async fn send_poll_request(
-        &self,
-        url: &str,
-        error_url: &str,
-    ) -> Result<reqwest::Response> {
+    async fn send_poll_request(&self, url: &str, error_url: &str) -> Result<reqwest::Response> {
         let mut attempt: usize = 0;
         loop {
             let request = self.build_poll_request(url);
@@ -434,10 +430,12 @@ impl InteractshClient {
 }
 
 fn retry_backoff_delay(base_ms: u64, attempt: usize) -> Duration {
-    let exponent = attempt.saturating_sub(1).min(u32::MAX as usize) as u32;
+    let exponent = u32::try_from(attempt.saturating_sub(1)).unwrap_or(u32::MAX);
     capped_exponential_backoff(base_ms, 2.0, exponent, u64::MAX)
 }
 
+// Keep the HTTP client's internal configuration out of this redacted view.
+#[allow(clippy::missing_fields_in_debug)]
 impl std::fmt::Debug for InteractshClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("InteractshClient")

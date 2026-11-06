@@ -1,6 +1,6 @@
 //! Mass interactsh config / context property tests (S-proptest-02).
 
-use interactsh::{ClientConfig, InteractionContext};
+use interactsh_client::{ClientConfig, InteractionContext};
 use proptest::prelude::*;
 
 fn valid_config() -> ClientConfig {

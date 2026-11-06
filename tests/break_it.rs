@@ -1,8 +1,11 @@
-use interactsh::{
+// Preserve the upstream tests' explicit, per-case configuration mutations.
+#![allow(clippy::field_reassign_with_default)]
+
+use interactsh_client::{
     ClientConfig, ConfigField, ConfigProblem, Error, InteractionContext, InteractshClient,
 };
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::sync::Arc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 // --- Category 1 & 9: Empty input / zero-length slices & off-by-one ---
 
@@ -482,7 +485,11 @@ async fn test_poll_response_extra_supports_objects_and_strings() {
     *generated_nonce.lock().await = gen.nonce;
 
     let poll_res = client.poll().await.unwrap();
-    assert_eq!(poll_res.len(), 2, "both object and string extra interactions must be parsed and correlated");
+    assert_eq!(
+        poll_res.len(),
+        2,
+        "both object and string extra interactions must be parsed and correlated"
+    );
     server_task.abort();
 }
 
@@ -570,7 +577,7 @@ async fn test_poll_error_url_redacts_secret() {
         "error must not contain the session secret: {message}"
     );
     assert!(
-        message.contains("secret=[redacted]") ,
+        message.contains("secret=[redacted]"),
         "error must carry the redacted poll URL: {message}"
     );
     server_task.abort();

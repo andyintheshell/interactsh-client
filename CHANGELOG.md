@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — interactsh-client fork
+
+- Forked the published `interactsh` 0.2.4 crate as `interactsh-client`, maintained at <https://github.com/andyintheshell/interactsh-client>.
+- Renamed Rust imports to `interactsh_client` and updated examples and documentation.
+- Preserved the original MIT/Apache-2.0 licensing and copyright notices; recorded the exact upstream archive in `UPSTREAM.md`.
+- Cleaned up inherited formatting, lint, and documentation warnings without changing the public API or library behavior; made CI resolve MSRV-compatible dependencies for its Rust 1.85 check.
+
+The entries below are the original upstream changelog.
+
 ## [0.2.4] - 2026-08-07
 
 - Fixed `blind_xss_payloads`, `blind_ssrf_payloads`, and `blind_xxe_payloads` to derive scheme-qualified `full_url` targets via `callback_forms` when passed bare-host callback inputs (such as generated URLs from `InteractshClient::generate_url()`), preventing silent payload failures caused by relative URL resolution. Added proving unit tests.

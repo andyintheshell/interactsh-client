@@ -1,4 +1,4 @@
-use interactsh::ClientConfig;
+use interactsh_client::ClientConfig;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ClientConfig {

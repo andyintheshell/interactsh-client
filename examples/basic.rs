@@ -1,7 +1,7 @@
 //! Demonstrates client registration against a minimal local server and URL generation.
 //! This avoids depending on the public Interactsh service at runtime.
 
-use interactsh::{ClientConfig, InteractionContext, InteractshClient};
+use interactsh_client::{ClientConfig, InteractionContext, InteractshClient};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 

@@ -16,7 +16,6 @@
     clippy::must_use_candidate,
     clippy::missing_errors_doc
 )]
-#![allow(clippy::must_use_candidate)]
 #![allow(clippy::return_self_not_must_use)]
 #![allow(clippy::needless_borrows_for_generic_args)]
 #![allow(clippy::float_cmp)]
@@ -27,9 +26,13 @@
 //! Detects blind vulnerabilities (SSRF, blind XSS, DNS exfiltration) that produce
 //! no visible response but trigger outbound requests to your interaction server.
 //!
+//! Independently maintained fork of `interactsh` 0.2.4 by andyintheshell, retaining
+//! the original MIT OR Apache-2.0 licensing. The original source repository was
+//! unavailable (404) when this fork was created; see the repository's UPSTREAM.md.
+//!
 //! ```rust,no_run
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! use interactsh::{InteractshClient, ClientConfig, InteractionContext};
+//! use interactsh_client::{InteractshClient, ClientConfig, InteractionContext};
 //!
 //! let client = InteractshClient::new(ClientConfig::default()).await?;
 //! let url = client.generate_url(

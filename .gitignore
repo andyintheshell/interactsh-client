@@ -1,5 +1,4 @@
 /target/
-Cargo.lock
 *.swp
 *.swo
 *~
@@ -7,4 +6,3 @@ Cargo.lock
 
 clippy.log
 clippy.json
-Cargo.lock

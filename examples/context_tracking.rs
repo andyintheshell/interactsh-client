@@ -1,4 +1,4 @@
-use interactsh::InteractionContext;
+use interactsh_client::InteractionContext;
 
 fn main() {
     let context = InteractionContext::builder("ssrf-probe")
