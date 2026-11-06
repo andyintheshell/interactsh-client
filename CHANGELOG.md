@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.3.0 — interactsh-client fork
 
+- Fixed public-server compatibility by changing default correlation ID/nonce lengths from 14/16 to upstream's 20/13. Self-hosted servers with custom lengths must configure matching client lengths explicitly.
+- Added a manual-only `public_smoke` example that uses curl and verifies the resulting HTTP interaction through library polling.
 - Raised the minimum supported Rust version to 1.95, matching Perseid, and pinned the development toolchain to 1.95.0.
 - Modernized CI runners and pinned actions, moved formatting to stable Rust, and made the MSRV tests and publishing use the checked-in lockfile.
 - **Breaking:** Updated Reqwest to 0.13. `InteractshClient::with_http_client` now requires a Reqwest 0.13 `Client`, and `Error::Transport::source` now contains a Reqwest 0.13 `Error`; Reqwest 0.12 types are no longer compatible. Custom HTTP client callers must update their Reqwest dependency to 0.13. Its `rustls` feature uses the platform certificate verifier.

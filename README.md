@@ -64,11 +64,17 @@ This crate provides an async client that handles URL generation with cryptograph
 
 Each generated URL contains:
 
-- A correlation ID (configurable length, default 14 chars)
-- A unique nonce (configurable length, default 16 chars)
+- A correlation ID (configurable length, default 20 chars)
+- A unique nonce (configurable length, default 13 chars)
 - The server hostname
 
 The combination ensures global uniqueness while letting you correlate interactions back to specific probes.
+
+The defaults match [upstream interactsh server settings](https://github.com/projectdiscovery/interactsh/blob/main/pkg/settings/default.go).
+Custom lengths must match the server's `-correlation-id-length` and
+`-correlation-id-nonce-length` settings; mismatched lengths can register successfully
+but silently fail to capture callbacks. For self-hosted servers using nondefault
+lengths, explicitly set both fields in `ClientConfig`.
 
 ```rust
 # use interactsh_client::{InteractshClient, InteractionContext};
@@ -168,6 +174,17 @@ let config = ClientConfig {
 ```
 
 ## Contributing
+
+### Manual public-server smoke test
+
+```sh
+cargo run --example public_smoke
+```
+
+Requires `curl` and internet access. Registers with public `oast.pro`, prints an
+OAST URL, sends a curl request, and polls for up to 60 seconds to verify the
+matching HTTP interaction. The request is visible to the public server; do not
+include secrets. This example is built in CI but is not run by CI or `cargo test`.
 
 Pull requests are welcome. There is no such thing as a perfect crate. If you find a bug, a better API, or just a rough edge, open a PR. We review quickly.
 

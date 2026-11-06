@@ -3,6 +3,32 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 #[test]
+fn defaults_match_upstream_public_server_lengths() {
+    let config = ClientConfig::default();
+    assert_eq!(config.correlation_id_length, 20);
+    assert_eq!(config.nonce_length, 13);
+}
+
+#[test]
+fn omitted_toml_lengths_match_public_server_defaults() {
+    let config = ClientConfig::from_toml_str("server = 'oast.pro'").unwrap();
+    assert_eq!(config, ClientConfig::default());
+    assert_eq!(config.correlation_id_length + config.nonce_length, 33);
+}
+
+#[test]
+fn custom_server_lengths_are_preserved() {
+    let config = ClientConfig::from_toml_str(
+        "server = 'self-hosted.example'\ncorrelation_id_length = 14\nnonce_length = 16",
+    )
+    .unwrap();
+    assert_eq!(config.correlation_id_length, 14);
+    assert_eq!(config.nonce_length, 16);
+    let parsed = ClientConfig::from_toml_str(&config.to_toml_string().unwrap()).unwrap();
+    assert_eq!(parsed, config);
+}
+
+#[test]
 fn default_config_is_valid() {
     let config = ClientConfig::default();
     let result = config.validate();
