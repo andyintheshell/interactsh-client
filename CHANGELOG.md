@@ -2,6 +2,9 @@
 
 ## Unreleased — interactsh-client fork
 
+- Raised the minimum supported Rust version to 1.95, matching Perseid, and pinned the development toolchain to 1.95.0.
+- Modernized CI runners and pinned actions, moved formatting to stable Rust, and made the MSRV tests and publishing use the checked-in lockfile.
+- Refreshed pinned dependencies and the lockfile, including AES 0.9, CTR 0.10, Base64 0.23, Reqwest 0.13, and TOML 1.2. Custom HTTP clients now use Reqwest 0.13; its `rustls` feature uses the platform certificate verifier. Rand stays on the latest 0.8 release and SHA-2 on 0.10 for stable RSA/guise compatibility.
 - Forked the published `interactsh` 0.2.4 crate as `interactsh-client`, maintained at <https://github.com/andyintheshell/interactsh-client>.
 - Renamed Rust imports to `interactsh_client` and updated examples and documentation.
 - Preserved the original MIT/Apache-2.0 licensing and copyright notices; recorded the exact upstream archive in `UPSTREAM.md`.
