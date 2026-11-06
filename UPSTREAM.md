@@ -7,8 +7,7 @@ authored by Santh. The original crate was no longer maintained, and its listed
 source repository was unavailable (404) when this fork was created on 2026-11-06.
 This project is not affiliated with or endorsed by the original maintainers.
 
-The `interactsh-client` fork has not been published to crates.io. Its first
-planned release is **0.1.0**, with versioning independent of the original
+The `interactsh-client` release series starts at **0.1.0**, with versioning independent of the original
 `interactsh` crate. The published version and date below refer only to upstream.
 
 ## Source

@@ -1,26 +1,61 @@
-# interactsh-client  -  Technical Spec
+# interactsh-client — Technical Spec
 
 ## Overview
 
-Async Rust client for out-of-band interaction servers.  Register a unique URL, inject it into scan targets, then poll for callbacks. Detects blind vulnerabilities (SSRF, blind XSS, DNS exfiltration) that produce no visible response but trigger outbound requests to your interaction server.  ```rust,no_run # async fn example() -> Result<(), Box<dyn std::error::Error>> { use interactsh_client::{InteractshClient, ClientConfig, InteractionContext};  let client = InteractshClient::new(ClientConfig::default()).await?; let url = client.generate_url( InteractionContext::new("my-scan").with_attribute("scanner", "demo") )?; // inject url.url into your target... let interactions = client.poll().await?; for hit in &interactions { println!("callback: {}", hit.event.protocol); } # Ok(()) # } ```
+Async Rust client for out-of-band interaction servers. Generate a callback hostname,
+inject it into a target, then poll for interactions correlated with probe context.
+
+```rust,no_run
+use interactsh_client::{ClientConfig, InteractionContext, InteractshClient};
+use std::time::Duration;
+
+# async fn example() -> interactsh_client::Result<()> {
+let client = InteractshClient::new(ClientConfig::default()).await?;
+let url = client.generate_url(InteractionContext::new("my-scan"))?;
+println!("Payload URL: {}", url.url);
+// Inject url.url into your target, then poll for up to 60 seconds.
+for _ in 0..12 {
+    tokio::time::sleep(Duration::from_secs(5)).await;
+    for hit in client.poll().await? {
+        println!("callback: {}", hit.event.protocol);
+    }
+}
+# Ok(())
+# }
+```
 
 ## Architecture
 
-The crate is organized into the following public modules:
+- `InteractshClient` registers with the server, generates callback hostnames,
+  tracks nonce-to-context mappings, and polls for correlated interactions.
+- `ClientConfig` controls server selection, authentication, callback lengths,
+  response limits, TLS, retries, and timeouts.
+- `InteractionContext`, `GeneratedUrl`, `InteractionEvent`, and
+  `CorrelatedInteraction` represent probes and their callbacks.
+- The public `payload_helpers` module generates blind-vulnerability payloads.
+- Internal client modules separate session management, HTTP transport, polling,
+  and RSA/AES response decryption. Public entry points are re-exported at the crate root.
 
-- (see source for module layout)
+## Configuration and compatibility
 
-## Guarantees
+The default server is `oast.pro`, with a 20-character correlation ID and
+13-character nonce. Custom lengths must match the server's
+`-correlation-id-length` and `-correlation-id-nonce-length` settings. Their sum
+must not exceed the 63-byte DNS label limit. Configuration can be loaded from TOML.
 
-- `#![forbid(unsafe_code)]` where applicable; see `src/lib.rs` for the exact lint preamble.
-- All public types have doc comments.
-- Error messages are actionable where applicable.
+## Guarantees and limits
 
-## Public API Summary
+- The crate forbids unsafe Rust code in its own source.
+- Unknown interactions are filtered using the client's tracked nonce mappings.
+- Session secrets and authentication tokens are redacted from client/config debug output.
+- Poll response bodies are bounded by `ClientConfig::max_poll_response_bytes`.
+- Public servers receive callback traffic; do not send secrets in probes.
 
-Key entry points are exported from `src/lib.rs` via `pub mod` and `pub use` re-exports.
-Consult the module-level documentation in each source file for function signatures and usage examples.
+## Error handling
 
-## Error Handling
+Fallible operations return `interactsh_client::Result<T>`. `Error` distinguishes
+configuration, transport, HTTP status, response-size, parsing, and cryptographic
+failures. `ConfigField`, `ConfigProblem`, and `TransportStage` provide typed detail.
 
-- `Error`
+See the [README](README.md) for setup and the
+[API documentation](https://docs.rs/interactsh-client) for signatures and defaults.
