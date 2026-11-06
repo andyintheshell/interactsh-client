@@ -7,13 +7,18 @@ inject it into a target, then poll for interactions correlated with probe contex
 
 ```rust,no_run
 use interactsh_client::{ClientConfig, InteractionContext, InteractshClient};
+use std::time::Duration;
 
 # async fn example() -> interactsh_client::Result<()> {
 let client = InteractshClient::new(ClientConfig::default()).await?;
 let url = client.generate_url(InteractionContext::new("my-scan"))?;
-// Inject url.url into your target, then allow time for callbacks.
-for hit in client.poll().await? {
-    println!("callback: {}", hit.event.protocol);
+println!("Payload URL: {}", url.url);
+// Inject url.url into your target, then poll for up to 60 seconds.
+for _ in 0..12 {
+    tokio::time::sleep(Duration::from_secs(5)).await;
+    for hit in client.poll().await? {
+        println!("callback: {}", hit.event.protocol);
+    }
 }
 # Ok(())
 # }
