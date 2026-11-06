@@ -4,18 +4,18 @@ Async client for polling out-of-band interaction servers. Generate unique URLs, 
 
 ## Quick start
 
-This fork has **not been published to crates.io**. Its first planned release is
-`interactsh-client` **0.1.0**; the upstream `interactsh` releases are a separate
-crate and version history. Until publication, use a Git dependency:
-
 Requires **Rust 1.95 or newer**. The checked-in `rust-toolchain.toml` pins development tools to Rust 1.95.0; CI also tests the latest stable and nightly compilers.
 
-`interactsh-client` is async. Add `tokio` to your `Cargo.toml` before copy-pasting the example:
+Add the crate to your project:
 
-```toml
-[dependencies]
-interactsh-client = { git = "https://github.com/andyintheshell/interactsh-client" }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+```sh
+cargo add interactsh-client
+```
+
+`interactsh-client` is async. Also add `tokio` before copy-pasting the example:
+
+```sh
+cargo add tokio --features macros,rt-multi-thread,time
 ```
 
 ```rust,no_run
