@@ -27,7 +27,7 @@ sha2 = "=0.10.9"
 guise-choice = "0.1.2"
 guise-pacing = "0.1.2"
 thiserror = "=2.0.18"
-toml = "=0.8.23"
+toml = "=1.1.8"
 futures-util = "=0.3.32"
 # Tokio is required for async backoff/sleep in the library (used by retries/backoff).
 tokio = { version = "=1.51.1", features = ["time"] }
