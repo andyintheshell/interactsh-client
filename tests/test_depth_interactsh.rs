@@ -1,10 +1,36 @@
 // Preserve the upstream tests' explicit, per-case configuration mutations.
 #![allow(clippy::field_reassign_with_default)]
 
-use interactsh_client::{ClientConfig, InteractionContext, InteractshClient};
+use interactsh_client::{ClientConfig, Error, InteractionContext, InteractshClient};
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
+
+// TCP reads are not HTTP message boundaries. Drain the complete registration
+// request before replying so unread body bytes cannot cause a connection reset.
+async fn read_request(socket: &mut TcpStream) -> String {
+    let mut request = Vec::new();
+    let mut buf = [0; 1024];
+    loop {
+        let n = socket.read(&mut buf).await.unwrap();
+        if n == 0 {
+            return String::new();
+        }
+        request.extend_from_slice(&buf[..n]);
+        assert!(request.len() <= 64 * 1024, "mock request too large");
+        if let Some(end) = request.windows(4).position(|bytes| bytes == b"\r\n\r\n") {
+            let headers = String::from_utf8_lossy(&request[..end]);
+            let length = headers
+                .lines()
+                .filter_map(|line| line.split_once(':'))
+                .find(|(name, _)| name.eq_ignore_ascii_case("content-length"))
+                .map_or(0, |(_, value)| value.trim().parse::<usize>().unwrap());
+            if request.len() >= end + 4 + length {
+                return headers.into_owned();
+            }
+        }
+    }
+}
 
 async fn mock_server() -> String {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -13,24 +39,22 @@ async fn mock_server() -> String {
 
     tokio::spawn(async move {
         while let Ok((mut socket, _)) = listener.accept().await {
-            let mut buf = [0; 1024];
-            if let Ok(n) = socket.read(&mut buf).await {
-                if n == 0 {
-                    continue;
-                }
-                let request = String::from_utf8_lossy(&buf[..n]);
+            // An idle connection must not block accepting other requests.
+            tokio::spawn(async move {
+                let request = read_request(&mut socket).await;
                 if request.contains("POST /register") {
-                    let response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}";
+                    let response =
+                        "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 2\r\n\r\n{}";
                     let _ = socket.write_all(response.as_bytes()).await;
                 } else if request.contains("GET /poll") {
                     let response =
-                        "HTTP/1.1 200 OK\r\nContent-Length: 17\r\n\r\n{\"interactions\":[]}";
+                        "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 19\r\n\r\n{\"interactions\":[]}";
                     let _ = socket.write_all(response.as_bytes()).await;
                 } else {
                     let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
                     let _ = socket.write_all(response.as_bytes()).await;
                 }
-            }
+            });
         }
     });
 
@@ -58,7 +82,7 @@ async fn test_depth_concurrent_stress() {
                 let context = InteractionContext::new(format!("task-{}-iter-{}", i, j));
                 let _url = c.generate_url(context).expect("Failed to generate URL");
             }
-            let _ = c.poll().await;
+            c.poll().await.expect("Concurrent poll should succeed");
         }));
     }
 
@@ -112,18 +136,15 @@ async fn mock_oversized_server() -> String {
 
     tokio::spawn(async move {
         while let Ok((mut socket, _)) = listener.accept().await {
-            let mut buf = [0; 1024];
-            if let Ok(n) = socket.read(&mut buf).await {
-                if n == 0 {
-                    continue;
-                }
-                let request = String::from_utf8_lossy(&buf[..n]);
+            tokio::spawn(async move {
+                let request = read_request(&mut socket).await;
                 if request.contains("POST /register") {
-                    let response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}";
+                    let response =
+                        "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 2\r\n\r\n{}";
                     let _ = socket.write_all(response.as_bytes()).await;
                 } else if request.contains("GET /poll") {
                     // Send an oversized chunked body that exceeds the limit
-                    let response_header = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n";
+                    let response_header = "HTTP/1.1 200 OK\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n";
                     let _ = socket.write_all(response_header.as_bytes()).await;
 
                     let chunk = "A".repeat(8192); // 8KB chunk
@@ -138,7 +159,7 @@ async fn mock_oversized_server() -> String {
                     let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
                     let _ = socket.write_all(response.as_bytes()).await;
                 }
-            }
+            });
         }
     });
 
@@ -158,14 +179,46 @@ async fn test_depth_integer_overflow_probes() {
         .expect("Initialization should pass");
     let result = client.poll().await;
 
-    assert!(result.is_err(), "Expected oversized response error");
-    let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("exceeded the configured size limit")
-            || err_msg.contains("OversizedResponse"),
-        "Unexpected error: {}",
-        err_msg
+        matches!(result, Err(Error::OversizedResponse { limit: 16384, .. })),
+        "Expected oversized response error, got {result:?}"
     );
+}
+
+#[tokio::test]
+async fn mock_servers_handle_idle_connections_and_fragmented_requests() {
+    for url in [mock_server().await, mock_oversized_server().await] {
+        let address = url.strip_prefix("http://").unwrap();
+        // Keep an earlier connection idle while a second request is processed.
+        let _idle = TcpStream::connect(address).await.unwrap();
+        let mut socket = TcpStream::connect(address).await.unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            socket.write_all(b"POST /reg").await.unwrap();
+            tokio::task::yield_now().await;
+            socket
+                .write_all(b"ister HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2048\r\n\r\n")
+                .await
+                .unwrap();
+            socket.write_all(&[b'x'; 1024]).await.unwrap();
+            // The mock must wait for the rest of the body before responding.
+            let mut byte = [0];
+            assert!(tokio::time::timeout(
+                std::time::Duration::from_millis(20),
+                socket.read(&mut byte)
+            )
+            .await
+            .is_err());
+            socket.write_all(&[b'x'; 1024]).await.unwrap();
+            let mut response = String::new();
+            socket.read_to_string(&mut response).await.unwrap();
+            assert_eq!(
+                response,
+                "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 2\r\n\r\n{}"
+            );
+        })
+        .await
+        .expect("An idle connection must not stall another request");
+    }
 }
 
 use faultkit::{inject_scoped, Fault};
