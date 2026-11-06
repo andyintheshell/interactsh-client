@@ -1,10 +1,17 @@
 # Changelog
 
-## Unreleased — 0.3.0 — interactsh-client fork
+## Unreleased — 0.1.0 — first interactsh-client release
 
+This fork has not been published to crates.io. These entries describe preparation
+for its first release, not breaking changes to a previously released
+`interactsh-client` API. The original `interactsh` releases below are separate
+upstream history.
+
+- Fixed public-server compatibility by changing default correlation ID/nonce lengths from 14/16 to upstream's 20/13. Self-hosted servers with custom lengths must configure matching client lengths explicitly.
+- Added a manual-only `public_smoke` example that uses curl and verifies the resulting HTTP interaction through library polling.
 - Raised the minimum supported Rust version to 1.95, matching Perseid, and pinned the development toolchain to 1.95.0.
 - Modernized CI runners and pinned actions, moved formatting to stable Rust, and made the MSRV tests and publishing use the checked-in lockfile.
-- **Breaking:** Updated Reqwest to 0.13. `InteractshClient::with_http_client` now requires a Reqwest 0.13 `Client`, and `Error::Transport::source` now contains a Reqwest 0.13 `Error`; Reqwest 0.12 types are no longer compatible. Custom HTTP client callers must update their Reqwest dependency to 0.13. Its `rustls` feature uses the platform certificate verifier.
+- Updated Reqwest to 0.13. `InteractshClient::with_http_client` requires a Reqwest 0.13 `Client`, and `Error::Transport::source` contains a Reqwest 0.13 `Error`. Its `rustls` feature uses the platform certificate verifier.
 - Refreshed pinned dependencies and the lockfile, including AES 0.9, CTR 0.10, Base64 0.23, and TOML 1.2. Rand stays on the latest 0.8 release and SHA-2 on 0.10 for stable RSA/guise compatibility.
 - Forked the published `interactsh` 0.2.4 crate as `interactsh-client`, maintained at <https://github.com/andyintheshell/interactsh-client>.
 - Renamed Rust imports to `interactsh_client` and updated examples and documentation.

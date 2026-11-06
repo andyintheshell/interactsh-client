@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-/// Default correlation ID length for generated interactsh sessions.
-pub const DEFAULT_CORRELATION_ID_LENGTH: usize = 14;
-/// Default nonce length for generated interactsh URLs.
-pub const DEFAULT_NONCE_LENGTH: usize = 16;
+/// Default correlation ID length, matching upstream interactsh servers.
+pub const DEFAULT_CORRELATION_ID_LENGTH: usize = 20;
+/// Default nonce length, matching upstream interactsh servers.
+pub const DEFAULT_NONCE_LENGTH: usize = 13;
 /// Default maximum poll response size in bytes.
 pub const DEFAULT_MAX_POLL_RESPONSE_BYTES: usize = 10 * 1024 * 1024;
 /// Default HTTP header used for bearer-style authorization.

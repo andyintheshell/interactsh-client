@@ -10,13 +10,17 @@ The original copyright notices and dual MIT/Apache-2.0 licensing are preserved. 
 
 ## Quick start
 
+This fork has **not been published to crates.io**. Its first planned release is
+`interactsh-client` **0.1.0**; the upstream `interactsh` releases are a separate
+crate and version history. Until publication, use a Git dependency:
+
 Requires **Rust 1.95 or newer**. The checked-in `rust-toolchain.toml` pins development tools to Rust 1.95.0; CI also tests the latest stable and nightly compilers.
 
 `interactsh-client` is async. Add `tokio` to your `Cargo.toml` before copy-pasting the example:
 
 ```toml
 [dependencies]
-interactsh-client = "0.3"
+interactsh-client = { git = "https://github.com/andyintheshell/interactsh-client" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 ```
 
@@ -64,11 +68,17 @@ This crate provides an async client that handles URL generation with cryptograph
 
 Each generated URL contains:
 
-- A correlation ID (configurable length, default 14 chars)
-- A unique nonce (configurable length, default 16 chars)
+- A correlation ID (configurable length, default 20 chars)
+- A unique nonce (configurable length, default 13 chars)
 - The server hostname
 
 The combination ensures global uniqueness while letting you correlate interactions back to specific probes.
+
+The defaults match [upstream interactsh server settings](https://github.com/projectdiscovery/interactsh/blob/main/pkg/settings/default.go).
+Custom lengths must match the server's `-correlation-id-length` and
+`-correlation-id-nonce-length` settings; mismatched lengths can register successfully
+but silently fail to capture callbacks. For self-hosted servers using nondefault
+lengths, explicitly set both fields in `ClientConfig`.
 
 ```rust
 # use interactsh_client::{InteractshClient, InteractionContext};
@@ -169,11 +179,21 @@ let config = ClientConfig {
 
 ## Contributing
 
+### Manual public-server smoke test
+
+```sh
+cargo run --example public_smoke
+```
+
+Requires `curl` and internet access. Registers with public `oast.pro`, prints an
+OAST URL, sends a curl request, and polls for up to 60 seconds to verify the
+matching HTTP interaction. The request is visible to the public server; do not
+include secrets. This example is built in CI but is not run by CI or `cargo test`.
+
 Pull requests are welcome. There is no such thing as a perfect crate. If you find a bug, a better API, or just a rough edge, open a PR. We review quickly.
 
 ## License
 
 Licensed under either the [MIT License](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option (`MIT OR Apache-2.0`). Original copyright and license notices are retained.
 
-[![crates.io](https://img.shields.io/crates/v/interactsh-client.svg)](https://crates.io/crates/interactsh-client)
-[![docs.rs](https://docs.rs/interactsh-client/badge.svg)](https://docs.rs/interactsh-client)
+API documentation can be built locally with `cargo doc --no-deps --open`.
