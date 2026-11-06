@@ -2,12 +2,6 @@
 
 Async client for polling out-of-band interaction servers. Generate unique URLs, inject them into payloads, and correlate DNS/HTTP interactions back to the original probe. Used for detecting blind XSS, SSRF, SQL injection, and other vulnerabilities where the target makes outbound requests.
 
-## Fork provenance and disclaimer
-
-This is an independent fork of [`interactsh` version 0.2.4](https://crates.io/crates/interactsh/0.2.4), originally authored by Santh. [andyintheshell](https://github.com/andyintheshell) created this fork to continue maintenance after the original crate was no longer maintained and its listed source repository became unavailable (404). This fork is not affiliated with or endorsed by the original maintainers.
-
-The original copyright notices and dual MIT/Apache-2.0 licensing are preserved. See [UPSTREAM.md](UPSTREAM.md) for the exact source archive and checksum.
-
 ## Quick start
 
 This fork has **not been published to crates.io**. Its first planned release is
@@ -197,3 +191,9 @@ Pull requests are welcome. There is no such thing as a perfect crate. If you fin
 Licensed under either the [MIT License](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option (`MIT OR Apache-2.0`). Original copyright and license notices are retained.
 
 API documentation can be built locally with `cargo doc --no-deps --open`.
+
+## Fork provenance and disclaimer
+
+This is an independent fork of [`interactsh` version 0.2.4](https://crates.io/crates/interactsh/0.2.4), originally authored by Santh. [andyintheshell](https://github.com/andyintheshell) created this fork to continue maintenance after the original crate was no longer maintained and its listed source repository became unavailable (404). This fork is not affiliated with or endorsed by the original maintainers.
+
+The original copyright notices and dual MIT/Apache-2.0 licensing are preserved. See [UPSTREAM.md](UPSTREAM.md) for the exact source archive and checksum.
