@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::time::sleep(Duration::from_secs(2)).await;
         for interaction in client.poll().await? {
             println!(
-                "Received {} for {}",
+                "Received {:?} for {:?}",
                 interaction.event.protocol, interaction.context.label
             );
             if interaction.event.protocol.eq_ignore_ascii_case("http")
@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .is_some_and(|request| request.contains("/interactsh-client-smoke-test"))
             {
                 println!(
-                    "Verified curl request:\n{}",
+                    "Verified curl request:\n{:?}",
                     interaction.event.raw_request.unwrap()
                 );
                 return Ok(());
