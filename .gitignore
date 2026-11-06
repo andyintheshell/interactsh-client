@@ -1,0 +1,10 @@
+/target/
+Cargo.lock
+*.swp
+*.swo
+*~
+.DS_Store
+
+clippy.log
+clippy.json
+Cargo.lock
