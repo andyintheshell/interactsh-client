@@ -19,7 +19,7 @@ aes = "=0.9.4"
 base64 = "=0.23.1"
 ctr = "=0.10.1"
 # RSA and the guise crates share rand 0.8's RNG traits.
-rand = "=0.8.8"
+rand = "=0.10.3"
 reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "http2", "charset", "json", "stream"] }
 rsa = { version = "=0.9.10", features = ["pem"] }
 serde = { version = "=1.0.229", features = ["derive"] }
