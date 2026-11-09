@@ -783,7 +783,7 @@ dependencies = [
  "guise-choice",
  "guise-pacing",
  "proptest",
- "rand 0.8.8",
+ "rand 0.10.3",
  "reqwest",
  "rsa",
  "serde",
